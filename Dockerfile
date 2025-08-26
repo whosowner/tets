@@ -1,21 +1,23 @@
-FROM ubuntu:22.04
+FROM ubuntu:20.04
+LABEL maintainer="wingnut0310 <wingnut0310@gmail.com>"
 
-# Install dependencies
-RUN apt update && \
-    apt install -y python3 screen && \
-    apt clean
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV GOTTY_TAG_VER v1.0.1
 
-# Create dummy index page
-RUN mkdir -p /app && echo "Shell Session Running..." > /app/index.html
-WORKDIR /app
+RUN apt-get -y update && \
+    apt-get install -y curl && \
+    curl -sLk https://github.com/yudai/gotty/releases/download/${GOTTY_TAG_VER}/gotty_linux_amd64.tar.gz \
+    | tar xzC /usr/local/bin && \
+    apt-get purge --auto-remove -y curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists*
 
-# Optional: Custom shell prompt
-RUN echo 'export PS1="root@hyperclouds:~# "' >> /root/.bashrc
 
-# Expose fake web port to keep Railway alive
+COPY /run_gotty.sh /run_gotty.sh
+
+RUN chmod 744 /run_gotty.sh
+
 EXPOSE 6080
 
-# Start dummy web server and launch shell in screen
-CMD python3 -m http.server 6080 & \
-    screen -dmS shell bash && \
-    tail -f /dev/null
+CMD ["/bin/bash","/run_gotty.sh"]
