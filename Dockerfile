@@ -1,18 +1,18 @@
-
-# Use an official Ubuntu runtime as a parent image
 FROM ubuntu:22.04
-
-# Set environment variable for the port
-ENV PORT=6080
-
+ 
 # Install dependencies
-RUN apt-get update && \
-    apt-get install -y curl wget gnupg software-properties-common && \
-    curl -fsSL https://code-server.dev/install.sh | sh && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Expose the correct port
-EXPOSE $PORT
-
-# Start code-server (listen on all interfaces)
-CMD ["code-server", "--bind-addr", "0.0.0.0:6080", "--auth", "none"]
+RUN apt update && \
+    apt install -y software-properties-common wget curl git openssh-client tmate python3 && \
+    apt clean
+ 
+# Create a dummy index page to keep the service alive
+RUN mkdir -p /app && echo "Tmate Session Running..." > /app/index.html
+WORKDIR /app
+ 
+# Expose a fake web port to trick Railway into keeping container alive
+EXPOSE 6080
+ 
+# Start a dummy Python web server to keep Railway service active
+# and start tmate session
+CMD python3 -m http.server 6080 & \
+    tmate -F
