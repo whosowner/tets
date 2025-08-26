@@ -2,28 +2,27 @@ FROM ubuntu:22.04
 
 # Install dependencies
 RUN apt update && \
-    apt install -y dropbear python3 && \
+    apt install -y dropbear python3 passwd && \
     apt clean
 
 # Create dummy index page
 RUN mkdir -p /app && echo "SSHx Session Running..." > /app/index.html
 WORKDIR /app
 
-# Set up Dropbear SSH server
+# Generate RSA host key
 RUN mkdir -p /etc/dropbear && \
-    echo "root:x:0:0:root:/root:/bin/bash" > /etc/passwd && \
-    echo "root::0:0:root:/root:/bin/bash" > /etc/shadow && \
-    mkdir -p /root/.ssh && \
-    chmod 700 /root/.ssh
+    dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
 
-# Add your public key for access (replace with your actual key)
-RUN echo "ssh-rsa AAAA... your_key_here" > /root/.ssh/authorized_keys && \
-    chmod 600 /root/.ssh/authorized_keys
+# Create root user and set password
+RUN echo "root:toor" | chpasswd
 
-# Expose fake web port to keep Railway alive
-EXPOSE 6080
+# Optional: Custom shell prompt
+RUN echo 'export PS1="root@hyperclouds:~# "' >> /root/.bashrc
+
+# Expose ports
 EXPOSE 22
+EXPOSE 6080
 
 # Start dummy web server and Dropbear SSH server
 CMD python3 -m http.server 6080 & \
-    dropbear -E -F -p 22
+    dropbear -E -F -p 22 -r /etc/dropbear/dropbear_rsa_host_key
