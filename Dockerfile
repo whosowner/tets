@@ -2,7 +2,7 @@
 FROM ubuntu:22.04
 
 # Set environment variable for the port
-ENV PORT=8080
+ENV PORT=6080
 
 # Install dependencies
 RUN apt-get update && \
